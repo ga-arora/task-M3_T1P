@@ -1,0 +1,88 @@
+#include <iostream>
+#include <fstream>
+#include <random>
+#include <chrono>
+#include <mpi.h>
+#include <opm.h>
+using namespace std;
+
+const int n = 1000;
+int A[n] [n], B[n] [n] , C [n], [n];
+viod initialising_matrices()
+{
+    #pragma opm parallel for
+    for (int a = 0; a < n; a++)
+    {
+        for (int b = 0; b < n; b++)
+        {
+            A[a][b] = (rand() % 100) + 1;
+            B[a][b] = (rand() % 100) + 1;
+            C[a][b] = 0;
+        }
+    }
+
+    void matix_multiplication(int rank, int size)
+    {
+        int start_row, end_row;
+        start_row = (n / size) * rank;
+        end_row = (n / size) * (rank + 1);
+        #pragma opm parallel for
+        for (int i = start_row; i < end_row; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                for (int k = 0; k < n; k++)
+                {
+                    c[i][j] += A[i][k] * B[k][j]
+                }
+            }
+
+            if(rank != 0)
+            {
+                MPI_Send(C + start_row, (n / size) * n, MPI_INT, 0, 0, MPI_COMM_WORLD);
+            }
+
+            else
+            {
+                for(int i = 1; i < size; i++)
+                {
+                    MPI_Recv(C + (n / size) i, (n / size) * n, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                }
+            }
+        }
+ 
+        int main(int argc, char ** argv)
+        {
+            int rank, size;
+            MPI_Init(&argc, &argv);
+            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+            MPI_COMM_size(MPI_COMM_WORLD, &size);
+            initialising_matrices();
+            auto start = chrono::high_resolution_clock::now();
+            matrix_multiplication(rang, size);
+            auto end = chorono::high_resolution_clock::now();
+            auto duration = 
+            if(rank == 0)
+            {
+                chrono::duration_cast<chrono::microseconds>(end-start);
+                of stream outfile("MPI_OpenMP_Matrix_file.txt");
+                for(int a = 0; a < n; a++)
+                {
+                    for (int b = 0; b < n; b++)
+                    {
+                        outfile << C[a][b]  << "";
+                    }
+                    outfile << "\n";
+                }
+            }
+        }
+
+        outfile.close();
+        double total_time = duration.count();
+        printf("Running time is:");
+        printf("%lf", total_time);
+        cout << "microseconds" << endl;
+    }
+        MPI_Finalize();
+        return 0;
+}
