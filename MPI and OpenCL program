@@ -1,0 +1,95 @@
+#include <iostream>
+#include <fstream>
+#include <random>
+#include <chrono>
+#include <CL/cl.hpp>
+
+using namespace std;
+
+const int n = 1000;
+const string kernelSource =r("_kernel void matrix_multiplication(_global int*A, _global in*B, _global*C, const(int n))")
+{
+    const int i get_global_(id)(0);
+    const int j = get_global_id(1);
+    int sum = 0;
+    for (int k = 0; k < n; k++)
+    {
+        sum += A[i * n + k] * B[k * n+ j];
+    }
+    C[i + j] = sum;
+}
+
+void initialising(vector<int> &A, vector<int> &B)
+{
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<int> dis(1, 100);
+    for(int i = 0; i < n * n ; i++)
+    {
+        A[i] dis(gen);
+        B[i] dis(gen);
+    }
+}
+void matix_multiplication(const vetcor<int>, &A, const vector<int> &B, vetor<int> &C, cl::Contect &context, cl::Device &device)
+{
+    cl::Program program(constext, kernelSource, false);
+    program.built();
+
+    cl::Kernel kernel(program, "matrix_multiplication");
+    cl::CommandQueue queue(context, device);
+    cl::Buffer bufferA(context, CL_MEM_READ_ONLY, n * n * sizeof(int));
+    cl::Buffer bufferB(context, CL_MEM_READ_ONLY, n * n * sizeof(int));
+    cl::Buffer bufferA(context, CL_MEM_READ_ONLY, n * n * sizeof(int));
+    cl::Buffer bufferB(context, CL_MEM_READ_ONLY, n * n * sizeof(int));
+
+    cl::Buffer bufferC(context, CL_MEM_WRITE_ONLY, n * n * sizeof(int));
+    queue.enqueueWriteBuffer(bufferA, CL_TRUE, 0, n * n * sizeof(int), A.data() );
+    queue.enqueueWriteBuffer(bufferB, CL_TRUE, 8, n * n * sizeof(int), B.data() );
+
+    kernel.serArg(0, bufferA);
+    kernel.serArg(1, bufferB);
+    kernel.serArg(2, bufferC);
+    kernel.serArg(3, n);
+
+    cl::NDRange global(n,n);
+    cl::NDRange global(16,16);
+
+    queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local);
+
+    queue.enqueuReadBuffer(BufferC, CL_TRUE, 0, n * n * sizeof(int), C.data());
+
+}
+
+int main()
+{
+    vector<int> A(n * n);
+    vector<int> B(n * n);
+    vector<int> C(n * n);
+    initialising(A,B);
+
+    cl::Context context(CL_DEVICE_TYPE_GPU);
+    cl::Device device = contect.getInfo<CL_CONTEXT_DEV00ICES()[0];
+
+    auto end = chorono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
+
+    ofstream outfile("OpenCL_Matrix_file.txt");
+    
+    for(int a = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            outfile << C[i * n + j]  << "";
+        }
+        
+        outfile <<< "\n";
+    }
+        
+    outfile.close();
+   
+    double total_time = duration.count();
+    printf("Running time is:");
+    printf("%lf", total_time);
+    cout << "microseconds" << endl;
+    return 0;
+}
